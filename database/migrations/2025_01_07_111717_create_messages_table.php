@@ -14,19 +14,21 @@ return new class extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->longText('message')->nullable();
-            $table->foreign('sender_id')->constrained('users');
-            $table->foreign('receiver_id')->nullable()->constrained('users');
-            $table->foreignId('group_id')->nullable()->constrained('groups');
-            $table->foreignId('conversation_id')->nullable()->constrained('conversations');
+            $table->unsignedBigInteger('sender_id');
+            $table->unsignedBigInteger('receiver_id')->nullable();
+            $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('receiver_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreignId('group_id')->nullable()->constrained('groups')->onDelete('cascade');
+            $table->foreignId('conversation_id')->nullable()->constrained('conversations')->onDelete('cascade');
             $table->timestamps();
         });
 
         Schema::table('groups', function (Blueprint $table) {
-            $table->foreignId('last_message_id')->nullable()->constrained('messages');
+            $table->foreignId('last_message_id')->nullable()->constrained('messages')->onDelete('cascade');
         });
         
         Schema::table('conversations', function (Blueprint $table) {
-            $table->foreignId('last_message_id')->nullable()->constrained('messages');
+            $table->foreignId('last_message_id')->nullable()->constrained('messages')->onDelete('cascade');
         });
 
     }

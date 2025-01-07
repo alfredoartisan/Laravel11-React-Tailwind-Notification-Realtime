@@ -15,6 +15,7 @@ class Group extends Model
         'description',
         'owner_id',
         'last_message_id',
+        
 
     ];
 
