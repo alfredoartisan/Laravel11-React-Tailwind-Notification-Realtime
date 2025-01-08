@@ -36,10 +36,16 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $users = User::inRandomOrder()->limit(rand(2, 5))->pluck('id');
-            $group->users()->attach(array_unique([1, ...$users]));
+            foreach ($users as $userId) {
+                
+                $group->users()->attach($userId);
+            }
         }
 
         Message::factory(100)->create();
+
+        /* dd(User::all()); */
+        
         $messages = Message::whereNull('group_id')->orderBy('created_at')->get();
 
         $conversations = $messages->groupBy(function ($message) {

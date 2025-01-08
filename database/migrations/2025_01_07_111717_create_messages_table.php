@@ -11,26 +11,25 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('messages', function (Blueprint $table) {
-            $table->id();
-            $table->longText('message')->nullable();
-            $table->unsignedBigInteger('sender_id');
-            $table->unsignedBigInteger('receiver_id')->nullable();
-            $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('receiver_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreignId('group_id')->nullable()->constrained('groups')->onDelete('cascade');
-            $table->foreignId('conversation_id')->nullable()->constrained('conversations')->onDelete('cascade');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('messages')) {
+            Schema::create('messages', function (Blueprint $table) {
+                $table->id();
+                $table->longText('message')->nullable();
+                $table->foreignId('sender_id')->constrained('users');
+                $table->foreignId('receiver_id')->nullable()->constrained('users');
+                $table->foreignId('group_id')->nullable()->constrained('groups');
+                $table->foreignId('conversation_id')->nullable()->constrained('conversations');
+                $table->timestamps();
+            });
+        }
 
         Schema::table('groups', function (Blueprint $table) {
             $table->foreignId('last_message_id')->nullable()->constrained('messages')->onDelete('cascade');
         });
-        
+
         Schema::table('conversations', function (Blueprint $table) {
             $table->foreignId('last_message_id')->nullable()->constrained('messages')->onDelete('cascade');
         });
-
     }
 
     /**
@@ -39,5 +38,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('messages');
+
+        Schema::table('groups', function (Blueprint $table) {
+            $table->dropForeign(['last_message_id']);
+            $table->dropColumn('last_message_id');
+        });
+
+        Schema::table('conversations', function (Blueprint $table) {
+            $table->dropForeign(['last_message_id']);
+            $table->dropColumn('last_message_id');
+        });
     }
 };

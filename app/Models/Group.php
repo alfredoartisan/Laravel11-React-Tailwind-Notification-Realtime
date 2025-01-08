@@ -13,6 +13,8 @@ class Group extends Model
     protected $fillable = [
         'name',
         'description',
+        'group_id',
+        'user_id',
         'owner_id',
         'last_message_id',
         
@@ -21,7 +23,7 @@ class Group extends Model
 
     public function users()
     {
-        return $this->belongsTo(User::class, 'group_users');
+        return $this->belongsToMany(User::class, 'group_user');
     }
 
     public function messages()
@@ -31,6 +33,6 @@ class Group extends Model
 
     public function owner()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class);
     }
 }

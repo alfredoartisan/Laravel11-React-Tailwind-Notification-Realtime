@@ -16,7 +16,7 @@ class MessageFactory extends Factory
      */
     public function definition(): array
     {
-        $senderId = $this->faker->numberBetween(0, 1);
+        $senderId = $this->faker->randomElement([0, 1]);
         if ($senderId === 0) {
             $senderId = $this->faker->randomElement(\App\Models\User::where('id', '!=', 1)->pluck('id')->toArray());
             $receiverId = 1;
@@ -29,7 +29,7 @@ class MessageFactory extends Factory
             $groupId = $this->faker->randomElement(\App\Models\Group::pluck('id')->toArray());
 
             $group = \App\Models\Group::find($groupId);
-            $senderId = $this->faker->randomElement($group->users()->pluck('id')->toArray());
+            $senderId = $this->faker->randomElement($group->users->pluck('id')->toArray());
             $receiverId = null;
         }
         return [
