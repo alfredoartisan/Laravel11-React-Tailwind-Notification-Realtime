@@ -21,11 +21,11 @@ return new class extends Migration
             });
         }
 
-        if (!Schema::hasTable('group_user')) {
-            Schema::create('group_user', function (Blueprint $table) {
+        if (!Schema::hasTable('group_users')) {
+            Schema::create('group_users', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('group_id')->constrained()->cascadeOnDelete();
-                $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+                $table->foreignId('group_id')->constrained('groups')->onDelete('cascade');
+                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
                 $table->timestamps();
                 $table->unique(['group_id', 'user_id']);
             });
@@ -37,7 +37,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('group_user');
+        Schema::dropIfExists('group_users');
         Schema::dropIfExists('groups');
     }
 };
