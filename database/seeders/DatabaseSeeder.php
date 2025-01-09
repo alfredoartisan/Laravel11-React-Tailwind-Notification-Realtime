@@ -36,11 +36,10 @@ class DatabaseSeeder extends Seeder
             ]);
 
             $users = User::inRandomOrder()->limit(rand(2, 5))->pluck('id');
-            foreach ($users as $userId) {
-                
-                $group->users()->attach($userId);
-            }
+
+            $group->users()->attach(array_unique([1, ...$users]));
         }
+
 
         Message::factory(100)->create();
 
