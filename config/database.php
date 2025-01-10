@@ -37,7 +37,7 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-
+        ],
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
@@ -57,7 +57,7 @@ return [
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
-
+ 
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
