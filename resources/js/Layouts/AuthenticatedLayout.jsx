@@ -13,7 +13,7 @@ export default function Authenticated({ header, children }) {
         useState(false);
 
     useEffect(() => {
-        console.log('AuthenticatedLayout mounted');
+        console.log("AuthenticatedLayout mounted");
     }, []);
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
