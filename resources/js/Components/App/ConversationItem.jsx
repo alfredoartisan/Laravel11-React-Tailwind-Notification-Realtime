@@ -3,34 +3,34 @@ import UserAvatar from "./UserAvatar";
 import GroupAvatar from "./GroupAvatar";
 import UserOptionsDropdown from "./UserOptionsDropdown";
 
-const ConversationItem = ({ 
-    conversation, 
-    selectedConversation = null, 
+const ConversationItem = ({
+    conversation,
+    selectedConversation = null,
     onSelect = null,
- }) => {
+}) => {
     const page = usePage();
     const currentUser = page.props.auth.user;
     let classes = "border-trasparent";
     if (selectedConversation
         !selectedConversation.is_group &&
-        !conversation.is_group && 
-        selectedConversation.id === conversation.id
+            !conversation.is_group &&
+            selectedConversation.id === conversation.id
     ) {
-        classes = "border-blue-500 bg-black/20";
-    }
-    if (
-        selectedConversation.is_group &&
-        conversation.is_group &&
-        selectedConversation.id === conversation.id
-    ) {
-        classes = "border-blue-500 bg-black/20";
-    }
-    return (
-        <Link
+    classes = "border-blue-500 bg-black/20";
+}
+if (
+    selectedConversation.is_group &&
+    conversation.is_group &&
+    selectedConversation.id === conversation.id
+) {
+    classes = "border-blue-500 bg-black/20";
+}
+return (
+    <Link
         href={
             conversation.is_group
-            ? route("chat.group", conversation)
-            : route("chat.user", conversation)
+                ? route("chat.group", conversation)
+                : route("chat.user", conversation)
         }
         preserveState
         className={
@@ -41,13 +41,12 @@ const ConversationItem = ({
                 : "pr-4")
         }
 
-        >
-            {conversation.is_user && (
-                <UserAvatar
-                />
-            )}
-        </Link>
-    );
+    >
+        {conversation.is_user &&<UserAvatar/>}
+        <div
+            className={`flex-1 text`}            ></div>
+    </Link>
+);
 };
 
 export default ConversationItem;
