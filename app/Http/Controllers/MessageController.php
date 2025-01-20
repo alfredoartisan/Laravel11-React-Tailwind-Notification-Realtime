@@ -70,7 +70,7 @@ class MessageController extends Controller
         if ($files) {
             foreach ($files as $file) {
                 $directory = 'attachments/' . Str::random(32);
-                Storage::makeDirectory($directory);
+                Storage::makeDirectory($directory); 
 
                 $model  = [
                     'message_id' => $message->id,

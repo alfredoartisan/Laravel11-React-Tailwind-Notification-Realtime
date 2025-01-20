@@ -23,13 +23,6 @@ export default {
     
     //daisyUIU config 
     daisyui: {
-        styled: true,
-        themes: true,
-        darkTheme: "dark",
-        themeRoot: ":root",
-        base: true,
-        utils: true,
-        logs: true,
-        rtl: false,
+        themes: ["dark"],
     },
 };

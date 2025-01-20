@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/inertia-react";
-import { ArrowLeftIcon } from "@heroicons/react";
+import { ArrowLeftIcon } from '@heroicons/react/20/solid';
 import UserAvatar from "./UserAvatar";
 import GroupAvatar from "./GroupAvatar";
 

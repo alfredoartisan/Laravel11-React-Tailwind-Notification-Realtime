@@ -1,9 +1,8 @@
-// filepath: /c:/Users/usuario/Documents/GitHub/Laravel11-React-Tailwind-Notification-Realtime/resources/js/Layouts/ChatLayout.jsx
+import React, { useEffect, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import ConversationItem from "@/Components/App/ConversationItem";
 import TextInput from "@/Components/TextInput";
 import { PencilSquareIcon } from "@heroicons/react/24/solid";
-import { usePage } from "@inertiajs/react";
-import React, { useEffect, useState } from "react";
 
 const ChatLayout = ({ children }) => {
     const page = usePage();
@@ -13,10 +12,7 @@ const ChatLayout = ({ children }) => {
     const [sortedConversations, setSortedConversations] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState({});
 
-    const isUserOnline = (userId) => onlineUsers[userId];
-
-    console.log("conversations", conversations);
-    console.log("selectedConversation", selectedConversation);
+    const isUserOnline = (userId) => onlineUsers.hasOwnProperty(userId);
 
     const onSearch = (ev) => {
         const search = ev.target.value.toLowerCase();

@@ -1,4 +1,3 @@
-// filepath: /c:/Users/usuario/Documents/GitHub/Laravel11-React-Tailwind-Notification-Realtime/resources/js/Components/App/ConversationItem.jsx
 import React from 'react';
 import { Link, usePage } from "@inertiajs/react";
 import UserAvatar from "./UserAvatar";

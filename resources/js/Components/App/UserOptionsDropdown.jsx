@@ -1,8 +1,13 @@
 import { Menu, Transition } from '@headlessui/react';
 import { MenuItem, MenuItems, MenuButton } from '@headlessui/react';
 import { Fragment } from 'react';
-import { EllipsisVerticalIcon, LockOpenIcon, UserIcon, UserPlusIcon } from '@heroicons/react/24/solid';
+import { EllipsisVerticalIcon,
+         LockOpenIcon,
+         LockClosedIcon,
+         UserIcon,
+        } from '@heroicons/react/24/solid';
 import axios from 'axios';
+import { ShieldCheckIcon } from '@heroicons/react/20/solid';
 
 export default function UserOptionsDropdown({ conversation }) {
     const changeUserRole = () => {
@@ -13,7 +18,7 @@ export default function UserOptionsDropdown({ conversation }) {
 
         //send axios post request to change user role and show notification on success
         axios
-            .post(route("users.role", conversation.id))
+            .post(route("users.changeRole", conversation.id))
             .then((res) => {
                 console.log(res.data);
             })
@@ -59,21 +64,22 @@ export default function UserOptionsDropdown({ conversation }) {
                     <MenuItems className="absolute right-0 mt-2 w-48 rounded-md bg-gray-800 shadow-lg z-50">
                         <div className="py-1 fixed overflow-visible bg-gray-800">
                             <MenuItem>
-                                {({ active }) => (
+                                {({ focus }) => (
                                     <button
                                         onClick={onBlockUser}
-                                        className={`${active ? "bg-black/30 text-white" : "text-gray-100"
+                                        className={`${focus ? "bg-black/30 text-white" : "text-gray-100"
                                             } group flex items-center px-4 py-2 text-sm`}
                                     >
-                                        {conversation.blocked_at ? (
+                                        {conversation.blocked_at && (
                                             <>
                                                 <LockOpenIcon className="w-4 h-4 mr-2" />
-                                                Unblock
+                                                Desbloquear
                                             </>
-                                        ) : (
+                                        )}
+                                        {(
                                             <>
                                                 <LockOpenIcon className="w-4 h-4 mr-2" />
-                                                Block
+                                                Bloquear
                                             </>
                                         )}
                                     </button>
@@ -82,23 +88,24 @@ export default function UserOptionsDropdown({ conversation }) {
                         </div>
                         <div className="px-1  bg-gray-800">
                             <MenuItem>
-                                {({ active }) => (
+                                {({ focus }) => (
                                     <button
                                         onClick={changeUserRole}
-                                        className={`${active
+                                        className={`${focus
                                                 ? "bg-black/30 text-white"
                                                 : "text-gray-100"
                                             } group flex items-center px-4 py-2 text-sm`}
                                     >
-                                        {conversation.is_admin ? (
+                                        {conversation.is_admin && (
                                             <>
                                                 <UserIcon className="w-4 h-4 mr-2" />
-                                                Make Regular User
+                                                Usuario Común
                                             </>
-                                        ) : (
+                                        )}
+                                        {conversation.is_admin && (
                                             <>
-                                                <UserPlusIcon className="w-4 h-4 mr-2" />
-                                                Make Admin
+                                                <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                                                Administrador
                                             </>
                                         )}
                                     </button>

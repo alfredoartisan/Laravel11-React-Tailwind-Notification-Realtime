@@ -1,16 +1,25 @@
-
+import React, { useRef, useEffect, useState, use } from 'react';
+import { usePage } from '@inertiajs/react';
 import ChatLayout from '@/Layouts/ChatLayout';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useRef, useEffect, useState } from 'react';
 import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid';
+import ConversationHeader from '@/Components/App/ConversationHeader';
+import MessageItem from '@/Components/App/MessageItem';
+import MessageInput from '@/Components/App/MessageInput';
 
-function Home({ messages }) {
-
-    const [loscalMessages, setLocalMessages] = useState([]);
-    const messageCtrRef = useRef(null);
+function Home({ selectedConversation = null, messages = null }) {   
+    const [localMessages, setLocalMessages] = useState([]);
+    const messagesCtrRef = useRef(null);
+     useEffect(() => {
+        setTimeout(() => {
+            if (messagesCtrRef.current){
+            messagesCtrRef.current.scrollTop = 
+            messagesCtrRef.current.scrollHeight;}
+     }, 100);
+}, [localMessages]);
 
     useEffect(() => {
-        setLocalMessages(messages);
+        setLocalMessages(messages ? messages.data.reverse() : []);
     }, [messages]);
 
     return (
@@ -21,7 +30,6 @@ function Home({ messages }) {
                         Seleccionar una conversación para empezar a chatear
                     </div>
                     <ChatBubbleLeftRightIcon className="w-24 h-24 inline-block" />
-
                 </div>
             )}
             {messages && (
@@ -33,14 +41,14 @@ function Home({ messages }) {
                         ref={messagesCtrRef}
                         className='flex-1 overflow-y-auto p-5'
                     >
-                        {localMessages.lenght === 0 && (
+                        {localMessages.length === 0 && (
                             <div className='flex justify-center items-center h-full'>
                                 <div className='text-lg text-slate-200'>
                                     Sin mensajes
                                 </div>
                             </div>
                         )}
-                        {localMessages.lenght > 0 && (
+                        {localMessages.length > 0 && (
                             <div className='flex flex-col'>
                                 {localMessages.map((message) => (
                                     <MessageItem
@@ -51,7 +59,7 @@ function Home({ messages }) {
                             </div>
                         )}
                     </div>
-                    <MessageInput conversation= {selectedConversation}/>
+                    <MessageInput conversation={selectedConversation} />
                 </>
             )}
         </>
@@ -61,7 +69,7 @@ function Home({ messages }) {
 Home.layout = (page) => {
     return (
         <AuthenticatedLayout user={page.props.auth.user}>
-            <ChatLayout children={page} />
+            <ChatLayout>{page}</ChatLayout>
         </AuthenticatedLayout>
     );
 };
