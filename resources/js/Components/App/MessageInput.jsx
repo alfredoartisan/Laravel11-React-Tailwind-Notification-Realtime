@@ -1,42 +1,111 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import {
+    PhotoIcon,
+    FaceSmileIcon,
+    HandThumbUpIcon,
+    PaperAirplaneIcon,
+    PaperClipIcon,
+} from '@heroicons/react/24/solid';
+import { ArrowPathIcon } from '@heroicons/react/24/outline'; // Import the spinner icon
+import NewMessageInput from "./NewMessageInput";
 
 const MessageInput = ({ conversation, onNewMessage }) => {
-    const [message, setMessage] = useState('');
+    const [newMessage, setNewMessage] = useState('');
+    const [inputErrorMessage, setInputErrorMessage] = useState('');
+    const [messageSending, setMessageSending] = useState(false);
 
-    const handleSendMessage = () => {
-        if (message.trim() === '') return;
-
-        // Lógica para enviar el mensaje
-        axios.post(route('messages.send', conversation.id), { message })
-            .then(response => {
-                onNewMessage(response.data.message);
-                setMessage('');
-            })
-            .catch(error => {
-                console.error('Error sending message:', error);
-            });
-    };
-
-    const handleKeyPress = (event) => {
-        if (event.key === 'Enter') {
-            handleSendMessage();
+    const onSendClick = () => {
+        if (!conversation) {
+            setInputErrorMessage('No hay conversación seleccionada');
+            setTimeout(() => {
+                setInputErrorMessage('');
+            }, 3000);
+            return;
         }
-    };
+
+        if (newMessage.trim() === '') {
+            setInputErrorMessage('Escriba un mensaje o suba archivo');
+            setTimeout(() => {
+                setInputErrorMessage('');
+            }, 3000);
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('message', newMessage);
+        if (conversation.is_user) {
+            formData.append('receiver_id', conversation.id);
+        } else if (conversation.is_group) {
+            formData.append('group_id', conversation.id);
+        }
+        setMessageSending(true);
+
+        axios.post(route("messages.store"), formData, {
+            onUploadProgress: (progressEvent) => {
+                const progress = Math.round(
+                    (progressEvent.loaded / progressEvent.total) * 100
+                );
+                console.log(progress);
+            },
+        }).then((response) => {
+            setNewMessage('');
+            setMessageSending(false);
+            onNewMessage(response.data);
+        }).catch((error) => {
+            setMessageSending(false);
+        });
+    }
 
     return (
-        <div className="p-4 border-t border-gray-200">
-            <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Escribe tu mensaje..."
-                className="w-full p-2 border rounded"
-            />
-            <button onClick={handleSendMessage} className="mt-2 p-2 bg-blue-500 text-white rounded">
-                Enviar
-            </button>
+        <div className="flex flex-wrap items-start border-t border-slate-700 py-3">
+            <div className="order-2 flex-1 xs:flex-none xs:order-1 p-2 flex items-center">
+                <button className='p-1 text-gray-400 hover:text-gray-200 relative'>
+                    <PaperClipIcon className="w-6" />
+                    <input 
+                        type="file"
+                        multiple
+                        className="absolute left-0 top-0 right-0 bottom-0 z-20 opacity-0 cursor-pointer"
+                    />
+                </button>
+                <button className='p-1 text-gray-400 hover:text-gray-200 relative'>
+                    <PhotoIcon className="w-6" />
+                    <input 
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        className="absolute left-0 top-0 right-0 bottom-0 z-20 opacity-0 cursor-pointer"
+                    /> 
+                </button>
+            </div>
+            <div className='order-1 px-3 xs:p-0 min-w-[220px] basis-full xs:basis-0 xs:order-2 flex-1 relative flex items-center'>
+                <NewMessageInput 
+                    value={newMessage}
+                    onSend={onSendClick}
+                    onChange={(ev) => setNewMessage(ev.target.value)}
+                />
+                <button
+                    onClick={onSendClick}
+                    className='btn btn-info rounded-l-none flex items-center ml-2'
+                >
+                    {messageSending && (
+                        <ArrowPathIcon className="w-6 h-6 animate-spin" /> // Use the spinner icon with animation
+                    )}
+                    <PaperAirplaneIcon className="w-6" />
+                    <span className='hidden sm:inline'>Send</span>
+                </button>
+            </div>
+            <div className="order-3 flex flex-inline items-center mt-2">
+                <button className='p-1 text-gray-400 hover:text-gray-300'>
+                    <FaceSmileIcon className='w-6 h-6' />
+                </button>
+                <button className='p-1 text-gray-400 hover:text-gray-300'>
+                    <HandThumbUpIcon className='w-6 h-6' />
+                </button>
+            </div>
+            {inputErrorMessage && (
+                <p className='text-xs text-red-400 order-4 w-full text-center mt-2'>{inputErrorMessage}</p>
+            )}
         </div>
     );
 };

@@ -1,8 +1,8 @@
 import React from 'react';
-import { Link, usePage } from "@inertiajs/react";
-import UserAvatar from "./UserAvatar";
-import GroupAvatar from "./GroupAvatar";
-import UserOptionsDropdown from "./UserOptionsDropdown";
+import { Link, usePage } from '@inertiajs/react';
+import UserAvatar from './UserAvatar';
+import GroupAvatar from './GroupAvatar';
+import UserOptionsDropdown from './UserOptionsDropdown';
 
 const ConversationItem = ({
     conversation,
@@ -32,12 +32,8 @@ const ConversationItem = ({
 
     return (
         <Link
-            href={
-                conversation.is_group
-                    ? route("chat.group", conversation)
-                    : route("chat.user", conversation)
-            }
-            preserveState
+            href="#"
+            onClick={() => onSelect && onSelect(conversation)}
             className={
                 "conversation-item flex items-center gap-2 text-gray-300 transition-all cursor-pointer border-1-4 hover:bg-black/30 " +
                 classes +
@@ -45,7 +41,6 @@ const ConversationItem = ({
                     ? " pr-2"
                     : " pr-4")
             }
-            onClick={() => onSelect && onSelect(conversation)}
         >
             {conversation.is_user && (
                 <UserAvatar user={conversation} online={online} />

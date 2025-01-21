@@ -57,7 +57,7 @@ class MessageController extends Controller
     
     public function store(StoreMessageRequest $request)
     {
-        $data = $request-> validated();
+        $data = $request->validated();
         $data['sender_id'] = auth()->id();
         $receiverId = $data['receiver_id'] ?? null;
         $groupId = $data['group_id'] ?? null;
@@ -72,31 +72,22 @@ class MessageController extends Controller
                 $directory = 'attachments/' . Str::random(32);
                 Storage::makeDirectory($directory); 
 
-                $model  = [
+                $attachment = [
                     'message_id' => $message->id,
                     'name' => $file->getClientOriginalName(),
                     'mime' => $file->getClientMimeType(),
                     'size' => $file->getSize(),
                     'type' => $file->getClientMimeType(),
                     'path' => $file->store($directory, 'public'),                
-                    
                 ];
-                $attachments = MessageAttachment::create($model);
-                $attachments[] = $attachment;
+                $attachments[] = MessageAttachment::create($attachment);
             }
-            $message->attachments = $attachments;
-        }
-        if ($receiverId) {
-            Conversation::updateConversationWithMessage($receiverId, auth()->id(), $message);
-        } 
-        if ($groupId) {
-            Group::updateGroupWithMessage($groupId, auth()->id(), $message);
         }
 
-        SocketMessage::dispatch($message);
-
-        return new MessageResource($message);
-
+        return response()->json([
+            'message' => $message,
+            'attachments' => $attachments,
+        ], 201);
     }
 
     public function destroy(Message $message)

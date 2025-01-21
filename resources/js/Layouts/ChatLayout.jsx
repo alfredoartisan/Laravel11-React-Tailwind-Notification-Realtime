@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import ConversationItem from "@/Components/App/ConversationItem";
 import TextInput from "@/Components/TextInput";
-import { PencilSquareIcon } from "@heroicons/react/24/solid";
+import { PencilSquareIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
+import ConversationHeader from "@/Components/App/ConversationHeader";
 
 const ChatLayout = ({ children }) => {
     const page = usePage();
@@ -11,6 +12,7 @@ const ChatLayout = ({ children }) => {
     const [localConversations, setLocalConversations] = useState([]);
     const [sortedConversations, setSortedConversations] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState({});
+    const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const isUserOnline = (userId) => onlineUsers.hasOwnProperty(userId);
 
@@ -69,7 +71,7 @@ const ChatLayout = ({ children }) => {
 
     return (
         <div className="flex-1 w-full flex overflow-hidden">
-            <div className="sidebar w-full sm:w-[220px] md:w-[300px] bg-slate-800 flex flex-col overflow-hidden p-2">
+            <div className={`sidebar w-full sm:w-[220px] md:w-[300px] bg-slate-800 flex flex-col overflow-hidden p-2 ${sidebarOpen ? 'block' : 'hidden'} sm:block`}>
                 <div className="flex items-center justify-between py-4 px-7 text-xl font-medium">
                     My Conversations
                     <div className="tooltip tooltip-left" data-tip="Create New Group">
@@ -91,14 +93,29 @@ const ChatLayout = ({ children }) => {
                             <ConversationItem
                                 conversation={conversation}
                                 selectedConversation={selectedConversation}
-                                onSelect={(conv) => console.log('Selected conversation:', conv)}
+                                onSelect={(conv) => {
+                                    console.log('Selected conversation:', conv);
+                                    setSidebarOpen(false);
+                                }}
                                 online={isUserOnline(conversation.id)}
                             />
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="content flex-1 flex flex-col overflow-hidden p-2">
+            <div className="content flex-1 flex flex-col overflow-hidden p-2 transition-transform transform duration-300 ease-in-out">
+                {!sidebarOpen && (
+                    <button
+                        className="sm:hidden p-2 text-gray-400 hover:text-gray-200"
+                        onClick={() => setSidebarOpen(true)}
+                    >
+                        <ArrowLeftIcon className="w-6 h-6" />
+                    </button>
+                )}
+                <ConversationHeader
+                    selectedConversation={selectedConversation}
+                    onBack={() => setSidebarOpen(true)}
+                />
                 {children}
             </div>
         </div>
