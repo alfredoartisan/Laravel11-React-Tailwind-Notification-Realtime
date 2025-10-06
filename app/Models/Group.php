@@ -50,6 +50,11 @@ class Group extends Model
 
     public function toConversationArray()
     {
+        // Cargamos la relación users si no está ya cargada
+        if (!$this->relationLoaded('users')) {
+            $this->load('users');
+        }
+        
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -57,12 +62,12 @@ class Group extends Model
             'is_group' => true,
             'is_user' => false,
             'owner_id' => $this->owner_id,
-            'users' => $this->users->pluck('id'),
+            'users' => $this->users, // Incluir usuarios completos, no solo IDs
+            'users_count' => $this->users->count(),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'last_message' => $this->last_message,
             'last_message_date' => $this->last_message_date,
-
         ];
     }
 

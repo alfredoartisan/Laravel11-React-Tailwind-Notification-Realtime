@@ -41,7 +41,7 @@ const MessageInput = ({ conversation, onNewMessage }) => {
         }
         setMessageSending(true);
 
-        axios.post(route("messages.store"), formData, {
+        axios.post(route("message.store"), formData, {
             onUploadProgress: (progressEvent) => {
                 const progress = Math.round(
                     (progressEvent.loaded / progressEvent.total) * 100
@@ -51,14 +51,21 @@ const MessageInput = ({ conversation, onNewMessage }) => {
         }).then((response) => {
             setNewMessage('');
             setMessageSending(false);
-            onNewMessage(response.data);
+            // Procesar mensaje localmente para mostrar inmediatamente sin depender del evento websocket
+            if (onNewMessage) onNewMessage(response.data);
+            console.log('Mensaje enviado con éxito:', response.data);
         }).catch((error) => {
             setMessageSending(false);
+            console.error('Error al enviar mensaje:', error);
+            setInputErrorMessage('Error al enviar el mensaje. Inténtalo de nuevo.');
+            setTimeout(() => {
+                setInputErrorMessage('');
+            }, 3000);
         });
     }
 
     return (
-        <div className="flex flex-wrap items-start border-t border-slate-700 py-3">
+        <div className="flex flex-wrap items-start border-t border-slate-700 py-3 bg-slate-800 w-full">
             <div className="order-2 flex-1 xs:flex-none xs:order-1 p-2 flex items-center">
                 <button className='p-1 text-gray-400 hover:text-gray-200 relative'>
                     <PaperClipIcon className="w-6" />
@@ -95,6 +102,11 @@ const MessageInput = ({ conversation, onNewMessage }) => {
                     <span className='hidden sm:inline'>Send</span>
                 </button>
             </div>
+            {inputErrorMessage && (
+                <div className="absolute -top-10 left-0 right-0 bg-red-500 text-white p-2 rounded text-sm">
+                    {inputErrorMessage}
+                </div>
+            )}
             <div className="order-3 flex flex-inline items-center mt-2">
                 <button className='p-1 text-gray-400 hover:text-gray-300'>
                     <FaceSmileIcon className='w-6 h-6' />

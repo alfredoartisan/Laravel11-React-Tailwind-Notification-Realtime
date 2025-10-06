@@ -4,15 +4,24 @@ import ConversationItem from "@/Components/App/ConversationItem";
 import TextInput from "@/Components/TextInput";
 import { PencilSquareIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
 import ConversationHeader from "@/Components/App/ConversationHeader";
+import { useConversation } from '@/Contexts/ConversationContext';
 
 const ChatLayout = ({ children }) => {
     const page = usePage();
-    const conversations = page.props.conversations;
+    const conversations = page.props.conversations || [];
     const selectedConversation = page.props.selectedConversation;
     const [localConversations, setLocalConversations] = useState([]);
     const [sortedConversations, setSortedConversations] = useState([]);
     const [onlineUsers, setOnlineUsers] = useState({});
     const [sidebarOpen, setSidebarOpen] = useState(true);
+    const { activeConversation, setActiveConversation } = useConversation();
+    
+    // Sincronizar selectedConversation con el contexto si existe
+    useEffect(() => {
+        if (selectedConversation && (!activeConversation || selectedConversation.id !== activeConversation.id)) {
+            setActiveConversation(selectedConversation);
+        }
+    }, [selectedConversation]);
 
     const isUserOnline = (userId) => onlineUsers.hasOwnProperty(userId);
 
@@ -69,6 +78,12 @@ const ChatLayout = ({ children }) => {
             });
     }, []);
 
+    const handleConversationClick = (conversation) => {
+        console.log('Conversación seleccionada:', conversation);
+        setActiveConversation(conversation);
+        setSidebarOpen(false);
+    };
+
     return (
         <div className="flex-1 w-full flex overflow-hidden">
             <div className={`sidebar w-full sm:w-[220px] md:w-[300px] bg-slate-800 flex flex-col overflow-hidden p-2 ${sidebarOpen ? 'block' : 'hidden'} sm:block`}>
@@ -93,10 +108,7 @@ const ChatLayout = ({ children }) => {
                             <ConversationItem
                                 conversation={conversation}
                                 selectedConversation={selectedConversation}
-                                onSelect={(conv) => {
-                                    console.log('Selected conversation:', conv);
-                                    setSidebarOpen(false);
-                                }}
+                                onSelect={handleConversationClick}
                                 online={isUserOnline(conversation.id)}
                             />
                         </div>
@@ -112,11 +124,15 @@ const ChatLayout = ({ children }) => {
                         <ArrowLeftIcon className="w-6 h-6" />
                     </button>
                 )}
-                <ConversationHeader
-                    selectedConversation={selectedConversation}
-                    onBack={() => setSidebarOpen(true)}
-                />
-                {children}
+                {selectedConversation || activeConversation ? (
+                    <div className="flex flex-col h-full">
+                        {React.cloneElement(children, { selectedConversation: selectedConversation || activeConversation })}
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500">Selecciona una conversación</p>
+                    </div>
+                )}
             </div>
         </div>
     );

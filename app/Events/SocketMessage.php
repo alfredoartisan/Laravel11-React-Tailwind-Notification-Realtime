@@ -2,13 +2,14 @@
 
 namespace App\Events;
 
+use App\Models\Message;
 use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
+use App\Http\Resources\MessageResource;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 
 class SocketMessage implements ShouldBroadcastNow 
 {
@@ -22,7 +23,23 @@ class SocketMessage implements ShouldBroadcastNow
         
     }
 
-    public function broadcastWhit(): array
+    /**
+     * The event's broadcast name.
+     */
+    public function broadcastAs(): string
+    {
+        return 'message.sent';
+    }
+    
+    /**
+     * Determine if this event should broadcast.
+     */
+    public function broadcastWhen(): bool
+    {
+        return true;
+    }
+
+    public function broadcastWith(): array
     {
         return [
             'message' => new MessageResource($this->message),
@@ -36,15 +53,13 @@ class SocketMessage implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         $m = $this->message;
-        $channels = [
-            new PrivateChannel('message.user'.collect([$m->sender_id, $m->receiver_id])->sort()->implode('-')),
-        ];
+        $channels = [];
 
         if ($m->group_id) {
             $channels[] = new PrivateChannel('message.group.'.$m->group_id);
         } else {
-            new PrivateChannel('message.user.' . collect([$m->sender_id, $m->receiver_id])
-            ->sort()->implode('-'));
+            $channels[] = new PrivateChannel('message.user.' . collect([$m->sender_id, $m->receiver_id])
+                ->sort()->implode('-'));
         }
 
         return $channels;

@@ -32,8 +32,17 @@ const ConversationItem = ({
 
     return (
         <Link
-            href="#"
-            onClick={() => onSelect && onSelect(conversation)}
+            href={conversation.is_user 
+                ? route('chat.user', { user: conversation.id }) 
+                : route('chat.group', { group: conversation.id })}
+            onClick={(e) => {
+                // Si queremos mantener también el manejo local con Context
+                if (onSelect) {
+                    e.preventDefault();
+                    console.log("Conversation clicked:", conversation);
+                    onSelect(conversation);
+                }
+            }}
             className={
                 "conversation-item flex items-center gap-2 text-gray-300 transition-all cursor-pointer border-1-4 hover:bg-black/30 " +
                 classes +

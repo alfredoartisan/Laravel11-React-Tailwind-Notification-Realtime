@@ -5,44 +5,57 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Group;
 use App\Models\Message;
+use App\Models\MessageAttachment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\StoreMessageRequest;
 use App\Http\Resources\MessageResource;
 
 class MessageController extends Controller
 {
     public function byUser(User $user)
     {
-        $messages = Message::where('¡sender_id', auth()->id())
-            ->where('receiver_id', $user->id)
-            ->orWhere('sender_id', $user->id)
-            ->where('receiver_id', auth()->id())
-            ->latest()
-            ->paginate(10);
-            return inertia('Home', [
-                'selelectedConversation' => $user->toConversationArray(),
-                'messages' => MessageResource::collection($messages),
-            ]);
+        $authId = request()->user()->id;
+        $messages = Message::where(function($query) use ($user, $authId) {
+            $query->where('sender_id', $authId)
+                  ->where('receiver_id', $user->id);
+        })->orWhere(function($query) use ($user, $authId) {
+            $query->where('sender_id', $user->id)
+                  ->where('receiver_id', $authId);
+        })
+        ->latest()
+        ->paginate(10);
+        
+        return inertia('Home', [
+            'selectedConversation' => $user->toConversationArray(),
+            'messages' => MessageResource::collection($messages),
+        ]);
     }
     public function byGroup(Group $group)
     {
+        // Cargar los usuarios del grupo
+        $group->load('users');
+        
         $messages = Message::where('group_id', $group->id)
             ->latest()
             ->paginate(10);
-            return inertia('Home', [
-                'selelectedConversation' => $group->toConversationArray(),
-                'messages' => MessageResource::collection($messages),
-            ]);
+            
+        return inertia('Home', [
+            'selectedConversation' => $group->toConversationArray(),
+            'messages' => MessageResource::collection($messages),
+        ]);
     }
 
     public function loadOlder(Message $message)
     {
         if ($message->group_id) {
-            $message = Message::where('created_at', '<', $message->created_at)
+            $messages = Message::where('created_at', '<', $message->created_at)
                 ->where('group_id', $message->group_id)
                 ->latest()
                 ->paginate(10);
         } else {
-            $message = Message::where('created_at', '<', $message->created_at)
+            $messages = Message::where('created_at', '<', $message->created_at)
                 ->where(function ($query) use ($message) {
                     $query->where('sender_id', $message->sender_id)
                         ->where('receiver_id', $message->receiver_id)
@@ -58,7 +71,7 @@ class MessageController extends Controller
     public function store(StoreMessageRequest $request)
     {
         $data = $request->validated();
-        $data['sender_id'] = auth()->id();
+        $data['sender_id'] = request()->user()->id;
         $receiverId = $data['receiver_id'] ?? null;
         $groupId = $data['group_id'] ?? null;
 
@@ -83,16 +96,26 @@ class MessageController extends Controller
                 $attachments[] = MessageAttachment::create($attachment);
             }
         }
+        
+        // Cargar las relaciones necesarias para el frontend
+        $message->load('sender');
+        
+        // Si es un mensaje de conversación (no grupo), actualizar la conversación
+        if ($receiverId) {
+            \App\Models\Conversation::updateConversationWithMessage($data['sender_id'], $receiverId, $message);
+        }
+        
+        // El evento se dispara automáticamente a través del MessageObserver
 
         return response()->json([
-            'message' => $message,
+            'message' => new MessageResource($message),
             'attachments' => $attachments,
         ], 201);
     }
 
     public function destroy(Message $message)
     {
-        if ($message->sender_id !== auth()->id()) {
+        if ($message->sender_id !== request()->user()->id) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
