@@ -79,9 +79,32 @@ const ChatLayout = ({ children }) => {
     }, []);
 
     const handleConversationClick = (conversation) => {
-        console.log('Conversación seleccionada:', conversation);
-        setActiveConversation(conversation);
-        setSidebarOpen(false);
+        try {
+            console.log('Conversación seleccionada:', conversation);
+            
+            if (!conversation || !conversation.id) {
+                console.error('Conversación inválida:', conversation);
+                return;
+            }
+            
+            // Actualizar el estado
+            setActiveConversation(conversation);
+            setSidebarOpen(false);
+            
+            // En caso de que haya problemas con el evento click, forzar la navegación
+            const url = conversation.is_user 
+                ? route('chat.user', { user: conversation.id }) 
+                : route('chat.group', { group: conversation.id });
+                
+            // Solo forzar navegación si hay problemas
+            if (window.location.href.includes('/user/') || window.location.href.includes('/group/')) {
+                if (window.location.href !== url) {
+                    window.location.href = url;
+                }
+            }
+        } catch (error) {
+            console.error('Error al manejar clic de conversación:', error);
+        }
     };
 
     return (

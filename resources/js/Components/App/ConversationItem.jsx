@@ -36,11 +36,19 @@ const ConversationItem = ({
                 ? route('chat.user', { user: conversation.id }) 
                 : route('chat.group', { group: conversation.id })}
             onClick={(e) => {
-                // Si queremos mantener también el manejo local con Context
-                if (onSelect) {
-                    e.preventDefault();
-                    console.log("Conversation clicked:", conversation);
-                    onSelect(conversation);
+                try {
+                    // Siempre usar manejo local si está disponible
+                    if (onSelect) {
+                        e.preventDefault();
+                        console.log("Conversation clicked:", conversation);
+                        onSelect(conversation);
+                    } else {
+                        // Si no hay manejador local, permitir la navegación normal
+                        console.log("Permitiendo navegación normal");
+                    }
+                } catch (error) {
+                    console.error("Error al manejar clic:", error);
+                    // Si hay un error, permitir que la navegación normal continúe
                 }
             }}
             className={

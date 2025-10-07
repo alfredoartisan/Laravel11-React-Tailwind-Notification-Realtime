@@ -81,9 +81,15 @@ function Home({ selectedConversation = null, messages = null }) {
         
         // Limpiar cualquier suscripción anterior
         if (echoChannelRef.current) {
-            echoChannelRef.current.stopListening('.message.sent');
-            window.Echo.leave(echoChannelRef.current.name);
-            console.log('Desuscribiendo del canal anterior:', echoChannelRef.current.name);
+            try {
+                // Evitar error si stopListening no existe
+                if (echoChannelRef.current.name) {
+                    window.Echo.leave(echoChannelRef.current.name);
+                    console.log('Desuscribiendo del canal anterior:', echoChannelRef.current.name);
+                }
+            } catch (error) {
+                console.error('Error al desuscribirse:', error);
+            }
             echoChannelRef.current = null;
         }
         
@@ -113,15 +119,24 @@ function Home({ selectedConversation = null, messages = null }) {
                 handleNewMessage(data);
             });
         
-        // Guardar referencia al canal
-        echoChannelRef.current = { name: channelName, ...channel };
+        // Guardar referencia al canal (solo el nombre)
+        echoChannelRef.current = { 
+            name: channelName
+        };
             
         // Limpiar suscripción al desmontar
         return () => {
-            if (echoChannelRef.current) {
-                echoChannelRef.current.stopListening('.message.sent');
-                window.Echo.leave(echoChannelRef.current.name);
-                console.log('Desuscribiendo del canal:', echoChannelRef.current.name);
+            try {
+                // Primero detenemos la escucha
+                channel.stopListening('.message.sent');
+                // Luego abandonamos el canal
+                if (echoChannelRef.current && echoChannelRef.current.name) {
+                    window.Echo.leave(echoChannelRef.current.name);
+                    console.log('Desuscribiendo del canal:', echoChannelRef.current.name);
+                }
+            } catch (error) {
+                console.error('Error al limpiar suscripción:', error);
+            } finally {
                 echoChannelRef.current = null;
             }
         };
