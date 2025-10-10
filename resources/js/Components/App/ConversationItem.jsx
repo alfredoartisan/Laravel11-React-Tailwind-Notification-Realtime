@@ -31,25 +31,10 @@ const ConversationItem = ({
     }
 
     return (
-        <Link
-            href={conversation.is_user 
-                ? route('chat.user', { user: conversation.id }) 
-                : route('chat.group', { group: conversation.id })}
+        <div
             onClick={(e) => {
-                try {
-                    // Siempre usar manejo local si está disponible
-                    if (onSelect) {
-                        e.preventDefault();
-                        console.log("Conversation clicked:", conversation);
-                        onSelect(conversation);
-                    } else {
-                        // Si no hay manejador local, permitir la navegación normal
-                        console.log("Permitiendo navegación normal");
-                    }
-                } catch (error) {
-                    console.error("Error al manejar clic:", error);
-                    // Si hay un error, permitir que la navegación normal continúe
-                }
+                e.preventDefault();
+                onSelect(conversation);
             }}
             className={
                 "conversation-item flex items-center gap-2 text-gray-300 transition-all cursor-pointer border-1-4 hover:bg-black/30 " +
@@ -84,7 +69,7 @@ const ConversationItem = ({
                     {conversation.last_message}
                 </div>
             </div>
-        </Link>
+        </div>
     );
 };
 

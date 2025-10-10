@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { usePage } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import ConversationItem from "@/Components/App/ConversationItem";
 import TextInput from "@/Components/TextInput";
 import { PencilSquareIcon, ArrowLeftIcon } from "@heroicons/react/24/solid";
@@ -15,7 +15,46 @@ const ChatLayout = ({ children }) => {
     const [onlineUsers, setOnlineUsers] = useState({});
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const { activeConversation, setActiveConversation } = useConversation();
-    
+
+    // Al cargar el componente, restaurar la conversación seleccionada
+    useEffect(() => {
+        const savedConversationId = localStorage.getItem('selectedConversationId');
+        const savedConversationType = localStorage.getItem('selectedConversationType');
+
+        if (savedConversationId && savedConversationType) {
+            // Encontrar la conversación guardada
+            const savedConversation = conversations.find(c =>
+                c.id.toString() === savedConversationId &&
+                c.type === savedConversationType
+            );
+
+            if (savedConversation) {
+                setActiveConversation(savedConversation);
+
+                // Navegar a la URL correcta
+                if (savedConversationType === 'user') {
+                    router.visit(`/user/${savedConversationId}`, {
+                        preserveState: true,
+                        replace: true
+                    });
+                } else if (savedConversationType === 'group') {
+                    router.visit(`/group/${savedConversationId}`, {
+                        preserveState: true,
+                        replace: true
+                    });
+                }
+            }
+        }
+    }, []);
+
+    // Cuando la conversación activa cambia, guardarla
+    useEffect(() => {
+        if (activeConversation?.id) {
+            localStorage.setItem('selectedConversationId', activeConversation.id);
+            localStorage.setItem('selectedConversationType', activeConversation.type);
+        }
+    }, [activeConversation]);
+
     // Sincronizar selectedConversation con el contexto si existe
     useEffect(() => {
         if (selectedConversation && (!activeConversation || selectedConversation.id !== activeConversation.id)) {
@@ -34,27 +73,45 @@ const ChatLayout = ({ children }) => {
         );
     };
 
+    // Modificar el useEffect que maneja el ordenamiento
     useEffect(() => {
-        setSortedConversations(
-            localConversations.sort((a, b) => {
-                if (a.updated_at && b.updated_at) {
-                    return a.blocked_at > b.blocked_at ? 1 : -1;
-                } else if (a.updated_at) {
-                    return 1;
-                } else if (b.updated_at) {
-                    return -1;
-                }
-                if (a.last_message_date && b.last_message_date) {
-                    return b.last_message_date.localeCompare(a.last_message_date);
-                } else if (a.last_message_date) {
-                    return -1;
-                } else if (b.last_message_date) {
-                    return 1;
-                }
-                return 0;
-            })
-        );
-    }, [localConversations]);
+        // Obtener el ID de la conversación activa (de cualquier fuente disponible)
+        const currentActiveId = activeConversation?.id || 
+                                selectedConversation?.id || 
+                                localStorage.getItem('selectedConversationId');
+
+        // Crear una nueva copia ordenada de las conversaciones
+        const sortedConvs = [...localConversations].sort((a, b) => {
+            // Prioridad 1: La conversación activa siempre va primero
+            if (a.id === currentActiveId) return -1;
+            if (b.id === currentActiveId) return 1;
+
+            // Prioridad 2: Ordenar por último mensaje (mantener la lógica existente)
+            if (a.last_message_date && b.last_message_date) {
+                return b.last_message_date.localeCompare(a.last_message_date);
+            } else if (a.last_message_date) {
+                return -1;
+            } else if (b.last_message_date) {
+                return 1;
+            }
+            
+            // Prioridad 3: Bloqueos (mantener la lógica existente)
+            if (a.blocked_at && b.blocked_at) {
+                return a.blocked_at > b.blocked_at ? 1 : -1;
+            } else if (a.blocked_at) {
+                return 1;
+            } else if (b.blocked_at) {
+                return -1;
+            }
+            
+            return 0;
+        });
+        
+        // Actualizar el estado solo si ha cambiado
+        if (JSON.stringify(sortedConvs) !== JSON.stringify(sortedConversations)) {
+            setSortedConversations(sortedConvs);
+        }
+    }, [localConversations, activeConversation, selectedConversation]);
 
     useEffect(() => {
         setLocalConversations(conversations);
@@ -80,28 +137,31 @@ const ChatLayout = ({ children }) => {
 
     const handleConversationClick = (conversation) => {
         try {
-            console.log('Conversación seleccionada:', conversation);
-            
             if (!conversation || !conversation.id) {
                 console.error('Conversación inválida:', conversation);
                 return;
             }
-            
-            // Actualizar el estado
+
+            // Actualizar el estado inmediatamente
             setActiveConversation(conversation);
+            
+            // Cerrar sidebar en móvil
             setSidebarOpen(false);
             
-            // En caso de que haya problemas con el evento click, forzar la navegación
-            const url = conversation.is_user 
-                ? route('chat.user', { user: conversation.id }) 
-                : route('chat.group', { group: conversation.id });
+            // Guardar en localStorage
+            localStorage.setItem('selectedConversationId', conversation.id);
+            localStorage.setItem('selectedConversationType', conversation.is_group ? 'group' : 'user');
+            
+            // Construir URL correcta
+            const url = conversation.is_group 
+                ? `/group/${conversation.id}` 
+                : `/user/${conversation.id}`;
                 
-            // Solo forzar navegación si hay problemas
-            if (window.location.href.includes('/user/') || window.location.href.includes('/group/')) {
-                if (window.location.href !== url) {
-                    window.location.href = url;
-                }
-            }
+            // Visitar la URL sin recargar
+            router.visit(url, { 
+                preserveState: true,
+                // No usar replace para que la navegación funcione
+            });
         } catch (error) {
             console.error('Error al manejar clic de conversación:', error);
         }

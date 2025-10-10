@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\Group;
 use App\Models\Message;
 use App\Models\MessageAttachment;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreMessageRequest;
@@ -27,9 +26,18 @@ class MessageController extends Controller
         ->latest()
         ->paginate(10);
         
+        $selectedConversation = [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'avatar' => $user->avatar,
+            'is_group' => false,
+            'users' => [$user->toArray()],
+        ];
+
         return inertia('Home', [
-            'selectedConversation' => $user->toConversationArray(),
             'messages' => MessageResource::collection($messages),
+            'selectedConversation' => $selectedConversation,
         ]);
     }
     public function byGroup(Group $group)

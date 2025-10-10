@@ -60,20 +60,25 @@ function Home({ selectedConversation = null, messages = null }) {
 
     useEffect(() => {
         if (messages && messages.data) {
-            // La paginación devuelve los más recientes primero, invertimos para mostrar cronológicamente
             const sortedMessages = [...messages.data].reverse();
-            setLocalMessages(sortedMessages);
             
-            // Hacer scroll hacia abajo cuando cargan los mensajes
-            setTimeout(() => {
-                if (messagesCtrRef.current) {
-                    messagesCtrRef.current.scrollTop = messagesCtrRef.current.scrollHeight;
-                }
-            }, 100);
-        } else {
-            setLocalMessages([]);
+            // Solo actualiza mensajes si estamos cambiando de conversación o hay mensajes nuevos
+            const currentConvId = currentConversation?.id;
+            const prevConvId = localMessages[0]?.conversation_id || 
+                              localMessages[0]?.group_id;
+            
+            if (currentConvId !== prevConvId || sortedMessages.length > 0) {
+                console.log("Actualizando mensajes con datos del servidor");
+                setLocalMessages(sortedMessages);
+                
+                setTimeout(() => {
+                    if (messagesCtrRef.current) {
+                        messagesCtrRef.current.scrollTop = messagesCtrRef.current.scrollHeight;
+                    }
+                }, 100);
+            }
         }
-    }, [messages]);
+    }, [messages, currentConversation]);
     
     // Escuchar eventos de mensajes en tiempo real
     useEffect(() => {
@@ -141,6 +146,13 @@ function Home({ selectedConversation = null, messages = null }) {
             }
         };
     }, [currentConversation]);
+
+    // En el useEffect que maneja el cambio de conversación
+    useEffect(() => {
+        if (selectedConversation?.id && messages?.data?.length === 0) {
+            console.log("Cambiando a nueva conversación, esperando mensajes...");
+        }
+    }, [selectedConversation?.id]);
 
     return (
         <>
