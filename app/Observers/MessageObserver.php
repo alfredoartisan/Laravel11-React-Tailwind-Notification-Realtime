@@ -12,6 +12,6 @@ class MessageObserver
      */
     public function created(Message $message): void
     {
-        event(new SocketMessage($message));
+        // event(new SocketMessage($message));
     }
 }

@@ -10,28 +10,30 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreMessageRequest;
 use App\Http\Resources\MessageResource;
+use App\Events\SocketMessage;
 
 class MessageController extends Controller
 {
     public function byUser(User $user)
     {
         $authId = request()->user()->id;
-        $messages = Message::where(function($query) use ($user, $authId) {
+        $messages = Message::where(function ($query) use ($user, $authId) {
             $query->where('sender_id', $authId)
-                  ->where('receiver_id', $user->id);
-        })->orWhere(function($query) use ($user, $authId) {
+                ->where('receiver_id', $user->id);
+        })->orWhere(function ($query) use ($user, $authId) {
             $query->where('sender_id', $user->id)
-                  ->where('receiver_id', $authId);
+                ->where('receiver_id', $authId);
         })
-        ->latest()
-        ->paginate(10);
-        
+            ->latest()
+            ->paginate(10);
+
         $selectedConversation = [
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
             'avatar' => $user->avatar,
             'is_group' => false,
+            'is_user' => true,
             'users' => [$user->toArray()],
         ];
 
@@ -44,11 +46,11 @@ class MessageController extends Controller
     {
         // Cargar los usuarios del grupo
         $group->load('users');
-        
+
         $messages = Message::where('group_id', $group->id)
             ->latest()
             ->paginate(10);
-            
+
         return inertia('Home', [
             'selectedConversation' => $group->toConversationArray(),
             'messages' => MessageResource::collection($messages),
@@ -75,7 +77,7 @@ class MessageController extends Controller
         }
         return MessageResource::collection($messages);
     }
-    
+
     public function store(StoreMessageRequest $request)
     {
         $data = $request->validated();
@@ -91,7 +93,7 @@ class MessageController extends Controller
         if ($files) {
             foreach ($files as $file) {
                 $directory = 'attachments/' . Str::random(32);
-                Storage::makeDirectory($directory); 
+                Storage::makeDirectory($directory);
 
                 $attachment = [
                     'message_id' => $message->id,
@@ -99,21 +101,22 @@ class MessageController extends Controller
                     'mime' => $file->getClientMimeType(),
                     'size' => $file->getSize(),
                     'type' => $file->getClientMimeType(),
-                    'path' => $file->store($directory, 'public'),                
+                    'path' => $file->store($directory, 'public'),
                 ];
                 $attachments[] = MessageAttachment::create($attachment);
             }
         }
-        
+
         // Cargar las relaciones necesarias para el frontend
         $message->load('sender');
-        
+
         // Si es un mensaje de conversación (no grupo), actualizar la conversación
         if ($receiverId) {
             \App\Models\Conversation::updateConversationWithMessage($data['sender_id'], $receiverId, $message);
         }
-        
-        // El evento se dispara automáticamente a través del MessageObserver
+
+        // El evento se dispara manualmente después de actualizar la conversación
+        SocketMessage::dispatch($message);
 
         return response()->json([
             'message' => new MessageResource($message),

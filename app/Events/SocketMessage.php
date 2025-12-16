@@ -9,9 +9,9 @@ use App\Http\Resources\MessageResource;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class SocketMessage implements ShouldBroadcastNow 
+class SocketMessage implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -20,7 +20,7 @@ class SocketMessage implements ShouldBroadcastNow
      */
     public function __construct(public Message $message)
     {
-        
+
     }
 
     /**
@@ -30,7 +30,7 @@ class SocketMessage implements ShouldBroadcastNow
     {
         return 'message.sent';
     }
-    
+
     /**
      * Determine if this event should broadcast.
      */
@@ -56,7 +56,7 @@ class SocketMessage implements ShouldBroadcastNow
         $channels = [];
 
         if ($m->group_id) {
-            $channels[] = new PrivateChannel('message.group.'.$m->group_id);
+            $channels[] = new PrivateChannel('message.group.' . $m->group_id);
         } else {
             $channels[] = new PrivateChannel('message.user.' . collect([$m->sender_id, $m->receiver_id])
                 ->sort()->implode('-'));
